@@ -205,12 +205,12 @@ print(combined_df.head())
 # --- step 8: save for later use ---
 
 # save hypergraph data
-np.savez('hypergraph_data.npz', H=H, Sh=Sh, Sv=Sv, W=W)
+np.savez('hypergraph_data.npz', H=H, Sh=Sh, Sv=Sv, W=W) # compressed numpy file
 print("Hypergraph data saved to 'hypergraph_data.npz'.")
 
 # save metadata (combined DataFrame)
 combined_df.to_csv('combined_data.csv', index=False)
-print("Metadata saved to 'combined_data.csv'.")
+print("Metadata saved to 'combined_data.csv'.") # csv file
 
 # --- step 9: print results ---
 
