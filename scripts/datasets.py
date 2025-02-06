@@ -11,16 +11,16 @@ class ImageDataset:
         """
         self.root_dir = Path(root_dir)
         
-        # Supported image extensions
+        # supported image extensions
         self.image_extensions = ['.jpg', '.jpeg', '.png', '.bmp']
         
-        # Get all image paths
+        # get all image paths
         self.image_paths = []
         for ext in self.image_extensions:
             self.image_paths.extend(glob.glob(str(self.root_dir / f'*{ext}')))
             self.image_paths.extend(glob.glob(str(self.root_dir / f'*{ext.upper()}')))
         
-        # Sort paths for consistency
+        # sort paths for consistency
         self.image_paths.sort()
         
         print(f"Found {len(self.image_paths)} images in {root_dir}")
