@@ -267,11 +267,11 @@ for rank, idx in enumerate(top_indices):
 
 # --- step 10: evaluation ---
 
-# Split the dataset into train and test sets.
+# split the dataset into train and test sets.
 train_indices, test_indices = train_test_split(range(len(combined_df)), test_size=0.2, random_state=42)
 
-# Build ground truth mapping:
-# For each test image, ground_truth[idx] is the set of indices of images with the same class and breed.
+# build ground truth mapping:
+# for each test image, ground_truth[idx] is the set of indices of images with the same class and breed.
 ground_truth = {}
 for idx in test_indices:
     row = combined_df.iloc[idx]
@@ -280,7 +280,7 @@ for idx in test_indices:
     # Get indices of all images with the same class_id and breed_id.
     ground_truth[idx] = set(combined_df[(combined_df['class_id'] == class_id) & (combined_df['breed_id'] == breed_id)].index.tolist())
 
-# Helper function to compute Discounted Cumulative Gain.
+# helper function to compute Discounted Cumulative Gain.
 def dcg(relevances):
     return sum(rel / np.log2(rank + 1) for rank, rel in enumerate(relevances, start=1))
 
@@ -289,13 +289,12 @@ results = {}
 
 for k in k_values:
     precision_scores = []
-    recall_scores = []
     ap_scores = []
     ndcg_scores = []
     
     for idx in test_indices:
         query_image_index = idx
-        # Get full ranking for the query image (excluding the query image itself).
+        # get full ranking for the query image (excluding the query image itself).
         ranking = np.argsort(W[query_image_index])[::-1]
         ranking = [i for i in ranking if i != query_image_index]
         top_k_indices = ranking[:k]
@@ -305,11 +304,9 @@ for k in k_values:
         retrieved_relevant = [i for i in top_k_indices if i in relevant_set]
         num_retrieved_relevant = len(retrieved_relevant)
         
-        # Compute precision and recall.
-        precision = num_retrieved_relevant / k
-        recall = num_retrieved_relevant / num_relevant if num_relevant > 0 else 0
-        
-        # Compute Average Precision (AP) for the top-k list.
+        # precision
+        precision = num_retrieved_relevant / k        
+        # Average Precision (AP) for the top-k list.
         ap = 0.0
         hit_count = 0
         for rank, i in enumerate(top_k_indices, start=1):
@@ -319,7 +316,7 @@ for k in k_values:
         if hit_count > 0:
             ap /= hit_count
         
-        # Compute NDCG for the top-k list.
+        # NDCG for the top-k list.
         actual_relevances = [1 if i in relevant_set else 0 for i in top_k_indices]
         ideal_relevances = sorted(actual_relevances, reverse=True)
         actual_dcg = dcg(actual_relevances)
@@ -327,18 +324,16 @@ for k in k_values:
         ndcg = actual_dcg / ideal_dcg if ideal_dcg > 0 else 0
         
         precision_scores.append(precision)
-        recall_scores.append(recall)
         ap_scores.append(ap)
         ndcg_scores.append(ndcg)
     
     results[k] = {
         'Precision': np.mean(precision_scores),
-        'Recall': np.mean(recall_scores),
         'MAP': np.mean(ap_scores),
         'NDCG': np.mean(ndcg_scores)
     }
 
-# Print evaluation results.
+# results.
 print("Evaluation Results:")
 for k_val, metrics in results.items():
     print(f"Top-{k_val}:")

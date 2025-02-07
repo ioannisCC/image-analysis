@@ -90,7 +90,7 @@ def load_saved_model(hypergraph_file='hypergraph_data.npz', metadata_file='combi
     return W, combined_df
 
 def query_image(W, combined_df, query, top_k=5, image_folder='images'):
-    # Determine query index: if query is int, use it directly; otherwise, search for the image_id.
+    # determine query index: if query is int, use it directly; otherwise, search for the image_id.
     if isinstance(query, int):
         query_index = query
     else:
@@ -100,8 +100,8 @@ def query_image(W, combined_df, query, top_k=5, image_folder='images'):
             return
         query_index = matches[0]
     
-    # Retrieve top_k similar images using the saved affinity matrix W.
-    # Exclude the query image itself.
+    # retrieve top_k similar images using the saved affinity matrix W.
+    # exclude the query image itself.
     sorted_indices = np.argsort(W[query_index])[-top_k*2:][::-1]
     top_indices = [idx for idx in sorted_indices if idx != query_index][:top_k]
     
@@ -119,8 +119,8 @@ def query_image(W, combined_df, query, top_k=5, image_folder='images'):
     precision = evaluate_precision(W, combined_df, query_index, k=top_k)
     print(f"\nPrecision@{top_k}: {precision:.4f}")
 
-    # Plot the query image and its top similar images.
-    # We assume each image is named as image_id + ".jpg" in the specified image_folder.
+    # plot the query image and its top similar images.
+    # we assume each image is named as image_id + ".jpg"
     plt.style.use('dark_background')
     plt.rcParams['figure.facecolor'] = 'black'
     plt.rcParams['savefig.facecolor'] = 'black'
@@ -133,7 +133,7 @@ def query_image(W, combined_df, query, top_k=5, image_folder='images'):
     fig, axes = plt.subplots(2, num_plots, figsize=(4 * num_plots, 8))
     fig.patch.set_facecolor('black')
 
-    # Query image
+    # query image
     query_meta = combined_df.iloc[query_index]
     query_image_path = os.path.join(image_folder, f"{query_meta['image_id']}.jpg")
     try:
@@ -145,19 +145,19 @@ def query_image(W, combined_df, query, top_k=5, image_folder='images'):
     axes[0,0].set_title("Query", color='white')
     axes[0,0].set_facecolor('black')
 
-    # Query metadata
+    # query metadata
     meta_text = f"Image ID: {query_meta['image_id']}\nClass ID: {query_meta['class_id']}\n" \
                 f"Species: {query_meta['species']}\nBreed ID: {query_meta['breed_id']}"
     axes[1,0].text(0.5, 0.5, meta_text, ha='center', va='center', color='white')
     axes[1,0].axis('off')
     axes[1,0].set_facecolor('black')
 
-    # Similar images
+    # similar images
     for i, idx in enumerate(top_indices, start=1):
         meta = combined_df.iloc[idx]
         score = W[query_index, idx]
         
-        # Image
+        # image
         image_path = os.path.join(image_folder, f"{meta['image_id']}.jpg")
         try:
             img = Image.open(image_path)
@@ -168,7 +168,7 @@ def query_image(W, combined_df, query, top_k=5, image_folder='images'):
         axes[0,i].set_title(f"Rank {i}\nScore: {score:.4f}", color='white')
         axes[0,i].set_facecolor('black')
         
-        # Metadata
+        # metadata
         meta_text = f"Image ID: {meta['image_id']}\nClass ID: {meta['class_id']}\n" \
                    f"Species: {meta['species']}\nBreed ID: {meta['breed_id']}"
         axes[1,i].text(0.5, 0.5, meta_text, ha='center', va='center', color='white')
@@ -179,23 +179,20 @@ def query_image(W, combined_df, query, top_k=5, image_folder='images'):
     plt.tight_layout()
     plt.show()
 
-
+# evaluate precision with ground truth
 def evaluate_precision(W, combined_df, query_index, k=5):
-    """
-    Evaluate precision@k for retrieval results
-    """
-    # Get ground truth: images of same breed/class as query
+    # get ground truth: images of same breed/class as query
     query_meta = combined_df.iloc[query_index]
     ground_truth = combined_df[
         (combined_df['breed_id'] == query_meta['breed_id']) & 
         (combined_df.index != query_index)
     ].index.tolist()
     
-    # Get top k retrieved images
+    # get top k retrieved images
     sorted_indices = np.argsort(W[query_index])[-k*2:][::-1]
     retrieved = [idx for idx in sorted_indices if idx != query_index][:k]
     
-    # Calculate precision
+    # calculate precision
     relevant = sum(1 for idx in retrieved if idx in ground_truth)
     precision = relevant / k
     
@@ -203,18 +200,6 @@ def evaluate_precision(W, combined_df, query_index, k=5):
 
 
 if __name__ == '__main__':
-    # Load saved hypergraph model and metadata.
-    # W, combined_df = load_saved_model()
-
-    # # Ask user for a query: can be an image id or an index.
-    # user_input = input("Enter image id or index to query: ")
-    # try:
-    #     query = int(user_input)
-    # except ValueError:
-    #     query = user_input.strip()
-    
-    # query_image(W, combined_df, query, top_k=5, image_folder='data/images')
-
     app = QApplication(sys.argv)
     W, combined_df = load_saved_model()
     window = ImageRetrievalGUI(W, combined_df)
