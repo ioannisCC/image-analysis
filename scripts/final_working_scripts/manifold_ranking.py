@@ -4,15 +4,13 @@ import scipy.sparse as sp
 from scipy.spatial.distance import cdist
 import os
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import precision_score, recall_score, average_precision_score, ndcg_score
-
 
 # path to 'list.txt' file containg all the metadata
-annotations_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "annotations", "list.txt")
+list_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "annotations", "list.txt")
 
 image_info = []
 
-with open(annotations_path, 'r') as file:
+with open(list_file, 'r') as file:
     for line in file:
         # skip the header lines
         if line.startswith("#"):
@@ -44,9 +42,9 @@ features_array = np.load('/Users/ioannis/Library/CloudStorage/OneDrive-unipi.gr/
 print(features_array.shape)
 
 # --- step 1: compute distances and similarities ---
+
 # calculate the distance of each images with all the training images using cosine distance
 # https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.cdist.html
-
 def calculate_distances(features, features_array):
     return cdist(features, features_array, metric='cosine')
 
@@ -67,12 +65,6 @@ initial_ranks_values = np.sort(similarity_matrix, axis=1)[:, ::-1]
 print(f'Initial Sorted Similarity Values (first 10 rows):\n{initial_ranks_values[:10]}\n')
 
 # --- step 2: rank normalization ---
-# this is a simple normalization. You can change the method as needed.
-# def rank_normalization(ranks, L):
-#     # For each row, assign a normalized weight of 1 for the top-L positions and 0 for others.
-#     norm_ranks = np.zeros_like(ranks, dtype=float)
-#     norm_ranks[:, :L] = 1.0
-#     return norm_ranks
 
 def rank_normalization(ranks, L): # L are top positions to consider
     num_items = ranks.shape[0]
@@ -80,11 +72,12 @@ def rank_normalization(ranks, L): # L are top positions to consider
     # reciprocal rank positions
     reciprocal_ranks = 1.0 / (ranks + 1)
     
-    # Compute the new similarity measure ⇢n
+    # compute the new similarity measure ⇢n
     rho_n = np.zeros((num_items, num_items))
     for i in range(num_items):
         for j in range(num_items):
             rho_n[i, j] = reciprocal_ranks[i, j] + reciprocal_ranks[j, i]
+            # rho_n[i, j] = 2 * L - (ranks[i, j] + ranks[j, i])
     
     # update the top-L positions based on the new similarity measure
     updated_ranks = np.argsort(-rho_n, axis=1)[:, :L]
@@ -101,7 +94,7 @@ print(f'Normalized Ranks (first 10 rows):\n{normalized_ranks[:10]}\n')
 def calculate_wp(i, x, initial_ranks, k):
     # i: item of which the weight is calculated
     # x: item of which weight we want to calculate 
-    # k: top items to retrieve (contorls rate of decay)
+    # k: top items to retrieve (controls rate of decay)
     tau_ix = np.where(initial_ranks[i] == x)[0][0] + 1  # Position of x in τi
     return 1 - np.log(tau_ix) / np.log(k)
 
@@ -163,7 +156,7 @@ print(S)
 w = np.sum(H, axis=1)
 H_sparse = sp.csr_matrix(H)
 
-# use sparse matrix since H is sparse
+# use sparse matrix operations since H is sparse
 
 #  Cartesian product matrix C
 C = (H_sparse.T.multiply(w)) @ H_sparse
@@ -175,14 +168,46 @@ print(W)
 # --- step 6: iterative ranking ---
 
 # refine rankings based on W
-iterations = 5
+iterations = 2
 T = initial_ranks.copy()
 for t in range(iterations):
     T = np.argsort(W, axis=1)[:, ::-1]
     print(f"Iteration {t+1} updated rankings (first 10 rows):")
     print(T[:10])
 
-# --- step 7: retrieve and display top-k similar images ---
+# not working the method proposed in the clasroom
+# refine rankings based on W 
+# iterations = 2
+# W_t = W.copy()  # initial W(0)
+# T = initial_ranks.copy()  # initial T(0)
+
+# for t in range(iterations):
+#     # update T(t) based on current W(t)
+#     T = np.argsort(W_t, axis=1)[:, ::-1]
+#     print(f"Iteration {t+1} updated rankings (first 10 rows):")
+#     print(T[:10])
+    
+#     # reconstruct hypergraph using new rankings T to get W(t+1)
+#     # build new hypergraph with new rankings
+#     H = build_hypergraph(features_array, T, k)
+    
+#     # compute new Sh and Sv
+#     Sh = np.dot(H, H.T)
+#     Sv = np.dot(H.T, H)
+#     S = np.multiply(Sh, Sv)
+    
+#     # compute new Cartesian product
+#     w = np.sum(H, axis=1)
+#     H_sparse = sp.csr_matrix(H)
+#     C = (H_sparse.T.multiply(w)) @ H_sparse
+    
+#     # update W(t+1)
+#     W_t = S * C.toarray()
+
+# # final W_t back to W
+# W = W_t.copy()
+
+# --- step 7: save for later use ---
 
 # combine features and metadata into a DataFrame
 combined_data = []
@@ -202,17 +227,41 @@ combined_df = pd.DataFrame(combined_data)
 print("Combined DataFrame head:")
 print(combined_df.head())
 
-# --- step 8: save for later use ---
+# get the absolute path of the current script
+current_script_path = os.path.abspath(__file__)
+artifacts_path = os.path.abspath(os.path.join(os.path.dirname(current_script_path), '..', '..', 'artifacts'))
+os.makedirs(artifacts_path, exist_ok=True) 
 
 # save hypergraph data
-np.savez('hypergraph_data.npz', H=H, Sh=Sh, Sv=Sv, W=W) # compressed numpy file
+hypergraph_file = os.path.join(artifacts_path, 'hypergraph_data.npz')
+np.savez(hypergraph_file, H=H, Sh=Sh, Sv=Sv, W=W) # compressed numpy file
 print("Hypergraph data saved to 'hypergraph_data.npz'.")
 
 # save metadata (combined DataFrame)
-combined_df.to_csv('combined_data.csv', index=False)
-print("Metadata saved to 'combined_data.csv'.") # csv file
+combined_data_file = os.path.join(artifacts_path, 'combined_data.csv')
+combined_df.to_csv(combined_data_file, index=False) # csv file
+print("Metadata saved to 'combined_data.csv'.")
 
-# --- step 9: print results ---
+# --- step 8: print results ---
+
+# evaluate precision with ground truth
+def evaluate_precision(W, combined_df, query_index, k=5):
+    # get ground truth: images of same breed/class as query
+    query_meta = combined_df.iloc[query_index]
+    ground_truth = combined_df[
+        (combined_df['breed_id'] == query_meta['breed_id']) & 
+        (combined_df.index != query_index)
+    ].index.tolist()
+    
+    # get top k retrieved images
+    sorted_indices = np.argsort(W[query_index])[-k*2:][::-1]
+    retrieved = [idx for idx in sorted_indices if idx != query_index][:k]
+    
+    # calculate precision
+    relevant = sum(1 for idx in retrieved if idx in ground_truth)
+    precision = relevant / k
+    
+    return precision
 
 # print all the results
 top_k = 5
@@ -253,6 +302,7 @@ query_image_index = query_image_metadata.name
 top_indices = [idx for idx in np.argsort(W[query_image_index])[-top_k*2:][::-1] if idx != query_image_index][:top_k]
 
 print(f"Top {top_k} similar images for query image {query_image_metadata['image_id']}:")
+print(f"Precision: " + str(evaluate_precision(W, combined_df, query_image_index, k=5)))
 print(f"  Class ID: {query_image_metadata['class_id']}, Species: {query_image_metadata['species']}, Breed ID: {query_image_metadata['breed_id']}\n")
 for rank, idx in enumerate(top_indices):
     score = W[query_image_index, idx]
@@ -262,10 +312,9 @@ for rank, idx in enumerate(top_indices):
           f"Species: {similar_image_metadata['species']}, "
           f"Breed ID: {similar_image_metadata['breed_id']}, "
           f"Score: {score:.4f}")
-    
 
 
-# --- step 10: evaluation ---
+# --- step 9: evaluation ---
 
 # split the dataset into train and test sets.
 train_indices, test_indices = train_test_split(range(len(combined_df)), test_size=0.2, random_state=42)
@@ -284,7 +333,7 @@ for idx in test_indices:
 def dcg(relevances):
     return sum(rel / np.log2(rank + 1) for rank, rel in enumerate(relevances, start=1))
 
-k_values = [5, 10, 20]  # top-k values for evaluation
+k_values = [5]  # top-k values for evaluation
 results = {}
 
 for k in k_values:

@@ -76,14 +76,21 @@ class ImageRetrievalGUI(QMainWindow):
 
 
 def load_saved_model(hypergraph_file='hypergraph_data.npz', metadata_file='combined_data.csv'):
+    current_script_path = os.path.abspath(__file__)
+    artifacts_path = os.path.abspath(os.path.join(os.path.dirname(current_script_path), '..', '..', 'artifacts'))
+    hypergraph_file = os.path.join(artifacts_path, 'hypergraph_data.npz')
+    metadata_file = os.path.join(artifacts_path, 'combined_data.csv')
+
     if not os.path.exists(hypergraph_file):
         print(f"Saved hypergraph model '{hypergraph_file}' not found. Please run the model-building script first.")
+        print("Please run the model-building script first.")
         exit(1)
     data = np.load(hypergraph_file)
     W = data['W']
     
     if not os.path.exists(metadata_file):
         print(f"Metadata file '{metadata_file}' not found. Please ensure you have saved the combined metadata.")
+        print("Please ensure you have saved the combined metadata.")
         exit(1)
     combined_df = pd.read_csv(metadata_file)
     

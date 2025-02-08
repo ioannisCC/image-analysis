@@ -4,7 +4,6 @@ import numpy as np
 import os
 from PIL import Image
 from torchvision import transforms
-from scipy.spatial.distance import cdist
 import pandas as pd
 import pickle
 
@@ -75,7 +74,7 @@ def extract_features(image_path, model, transform):
         return None
 
 # training images
-image_dir = '../data/images/'
+image_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data", "images")
 
 all_features = []
 
@@ -114,17 +113,28 @@ print("Sample metadata with reshaped features:", all_features[0])
 print(len(all_features))
 print("Shape of reshaped feature vector:", all_features[0]['features'].shape)
 
+# --- save the features ---
+
 features_array = features_array.reshape(features_array.shape[0], -1)  # flatten the 1x1 spatial dimension
 print(features_array.shape)  # (nr of images, nr of features for each image)
 
+# absolute path of the current script
+current_script_path = os.path.abspath(__file__)
+print(f"Current script location: {current_script_path}")
+
+# absolute path for artifacts folder
+artifacts_path = os.path.abspath(os.path.join(os.path.dirname(current_script_path), '..', '..', 'artifacts'))
+print(f"Attempting to save to: {artifacts_path}")
+
 # where the files will be saved
-save_folder = '../../artifacts'  # Replace with your path
-os.makedirs(save_folder, exist_ok=True)  # Create the folder if it doesn't exist
+os.makedirs(artifacts_path, exist_ok=True)  # create it if it does not exist
+
+features_file = os.path.join(artifacts_path, 'features.npy')
+all_features_file = os.path.join(artifacts_path, 'all_features.pkl')
 
 # save files
-np.save(os.path.join(save_folder, 'features.npy'), features_array)
-with open(os.path.join(save_folder, 'all_features.pkl'), 'wb') as f:
+np.save(features_file, features_array)
+with open(all_features_file, 'wb') as f:
     pickle.dump(all_features, f)
-
 
 print("all_features saved successfully!")
