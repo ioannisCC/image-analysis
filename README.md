@@ -19,27 +19,23 @@ This project implements a **content-based image retrieval system** using **hyper
 
 ![image](https://github.com/user-attachments/assets/05c56dad-2b7f-428a-bf37-2f4c3a27d84e)
 
-.
-├── artifacts/
-│   ├── all_features.pkl        # Extracted features with metadata
-│   ├── combined_data.csv       # Combined metadata for retrieval
-│   ├── features.npy           # ResNet50 feature vectors
-│   └── hypergraph_data.npz    # Hypergraph model data
-│
-├── data/
-│   ├── annotations/           # Dataset annotations
-│   └── images/               # Pet dataset images
-│
-├── documentation/            # Project documentation
-│
-├── scripts/
-│   ├── drafts_&_tests/      # Development scripts
-│   └── final_working_scripts/
-│       ├── feature_extraction.py      # ResNet50 feature extraction
-│       ├── image_retrieval_system.py  # Main retrieval system
-│       └── manifold_ranking.py        # Hypergraph ranking implementation
-│
-└── .gitignore
+📦 assignment/
+├── 📂 artifacts/
+│   ├── 📄 all_features.pkl          # Extracted features with metadata
+│   ├── 📄 combined_data.csv         # Combined metadata for retrieval
+│   ├── 📄 features.npy              # ResNet50 feature vectors
+│   └── 📄 hypergraph_data.npz       # Hypergraph model data
+├── 📂 data/
+│   ├── 📂 annotations/              # Dataset annotations
+│   └── 📂 images/                   # Pet dataset images
+├── 📂 documentation/                # Project documentation
+├── 📂 scripts/
+│   ├── 📂 drafts_&_tests/          # Development scripts
+│   └── 📂 final_working_scripts/
+│       ├── 📄 feature_extraction.py     # ResNet50 feature extraction
+│       ├── 📄 image_retrieval_system.py # Main retrieval system
+│       └── 📄 manifold_ranking.py       # Hypergraph ranking implementation
+└── 📄 .gitignore
 
 ---
 
