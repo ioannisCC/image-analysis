@@ -167,15 +167,6 @@ print(W)
 
 # --- step 6: iterative ranking ---
 
-# refine rankings based on W
-iterations = 2
-T = initial_ranks.copy()
-for t in range(iterations):
-    T = np.argsort(W, axis=1)[:, ::-1]
-    print(f"Iteration {t+1} updated rankings (first 10 rows):")
-    print(T[:10])
-
-# not working the method proposed in the clasroom
 # refine rankings based on W 
 # iterations = 2
 # W_t = W.copy()  # initial W(0)
@@ -206,6 +197,38 @@ for t in range(iterations):
 
 # # final W_t back to W
 # W = W_t.copy()
+
+# --- step 6: iterative ranking (alternative version) ---
+
+def iterative_ranking_simple(W_initial, iterations=2):
+    """
+    Simpler iterative ranking that only updates rankings based on W
+    without reconstructing the hypergraph.
+    """
+    W = W_initial.copy()
+    
+    for t in range(iterations):
+        # Update rankings based on current W
+        T = np.argsort(W, axis=1)[:, ::-1]
+        print(f"Iteration {t+1} updated rankings (first 10 rows):")
+        print(T[:10])
+        
+        # Update W using current rankings
+        # Just update the similarity values based on ranking positions
+        W_new = np.zeros_like(W)
+        n = W.shape[0]
+        for i in range(n):
+            for j in range(n):
+                # Use ranking position to determine new similarity
+                pos_i = np.where(T[i] == j)[0][0]
+                pos_j = np.where(T[j] == i)[0][0]
+                W_new[i,j] = 1.0 / (pos_i + pos_j + 1)  # +1 to avoid division by zero
+        
+        W = W_new
+
+    return W
+
+W = iterative_ranking_simple(W)
 
 # --- step 7: save for later use ---
 
