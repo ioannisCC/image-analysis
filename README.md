@@ -33,7 +33,7 @@ Key steps in the algorithm include:
 
 ## **Project Structure**
 
-                                                ![image](https://github.com/user-attachments/assets/05c56dad-2b7f-428a-bf37-2f4c3a27d84e)
+![image](https://github.com/user-attachments/assets/05c56dad-2b7f-428a-bf37-2f4c3a27d84e)
 
 ---
 
