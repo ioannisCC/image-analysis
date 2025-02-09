@@ -2,6 +2,9 @@
 
 This project implements an image retrieval system using hypergraph-based manifold ranking, as described in the paper *"Multimedia Retrieval through Unsupervised Hypergraph-based Manifold Ranking"* (IEEE TRANSACTIONS ON IMAGE PROCESSING, VOL. 28, NO. 12, DECEMBER 2019). The system retrieves similar images based on content using a combination of feature extraction, hypergraph construction, and ranking algorithms.
 
+![image](https://github.com/user-attachments/assets/41ff6de8-3d74-46b4-9595-ef1fd3ff9665)
+
+
 ---
 
 ## Table of Contents
